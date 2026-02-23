@@ -1,25 +1,26 @@
 // Página de producto — información técnica del Introcan Safety
-import { Shield, Droplets, Crosshair, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import heroImage from "@/assets/introcan-hero.jpg";
+import beneficio1 from "@/assets/beneficio1.jpg";
 
 const benefits = [
   {
-    icon: Shield,
+    image: beneficio1,
     title: "Escudo de Seguridad Pasiva",
     description: "Se activa automáticamente al retirar la aguja, eliminando el riesgo de pinchazos accidentales.",
   },
   {
-    icon: Droplets,
+    image: beneficio1,
     title: "Septo Multi-Acceso",
     description: "Minimiza la necesidad de compresión venosa, reduciendo la exposición a sangre.",
   },
   {
-    icon: Crosshair,
+    image: beneficio1,
     title: "Bisel de Corte Universal",
     description: "Geometría optimizada para inserción suave con menos trauma tisular.",
   },
@@ -60,13 +61,15 @@ export default function DoctorProducto() {
         <h2 className="mb-6 text-2xl font-bold text-foreground">Beneficios Clave</h2>
         <div className="grid gap-6 md:grid-cols-3">
           {benefits.map((b) => (
-            <Card key={b.title} className="border-0 shadow-sm">
-              <CardContent className="p-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <b.icon className="h-6 w-6" />
+            <Card key={b.title} className="border-0 shadow-sm overflow-hidden">
+              <CardContent className="p-0 flex flex-col">
+                <div className="flex h-40 w-full items-center justify-center bg-primary/10">
+                  <img src={b.image} alt={b.title} className="h-32 w-32 object-contain" />
                 </div>
-                <h3 className="mb-2 font-bold text-foreground">{b.title}</h3>
-                <p className="text-sm text-muted-foreground">{b.description}</p>
+                <div className="p-6">
+                  <h3 className="mb-2 font-bold text-foreground">{b.title}</h3>
+                  <p className="text-sm text-muted-foreground">{b.description}</p>
+                </div>
               </CardContent>
             </Card>
           ))}
