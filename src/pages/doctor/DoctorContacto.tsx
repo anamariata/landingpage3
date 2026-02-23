@@ -90,8 +90,8 @@ export default function DoctorContacto() {
   };
 
   return (
-    <div className="mx-auto max-w-lg">
-      <Card className="border-0 shadow-sm">
+    <div className="mx-auto max-w-lg min-h-screen flex flex-col justify-start py-8 overflow-y-auto">
+      <Card className="border-0 shadow-sm flex-1">
         <CardHeader>
           <CardTitle className="text-2xl">Solicitar Información</CardTitle>
           <CardDescription>
