@@ -18,7 +18,7 @@ export function LayoutDoctor() {
   return (
     <div className="min-h-screen bg-background">
       <TopNavDoctor />
-      <main className="pb-20 md:pb-0">
+      <main className="pb-20 md:pt-16 md:pb-0">
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
           <Outlet />
         </div>
