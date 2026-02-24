@@ -16,13 +16,7 @@ import NotFound from "./pages/NotFound";
 import LoginDoctor from "./pages/auth/LoginDoctor";
 import LoginAdmin from "./pages/auth/LoginAdmin";
 
-// Páginas del doctor
-import DoctorInicio from "./pages/doctor/DoctorInicio";
-import DoctorProducto from "./pages/doctor/DoctorProducto";
-import DoctorGuias from "./pages/doctor/DoctorGuias";
-import DoctorFAQ from "./pages/doctor/DoctorFAQ";
-import DoctorContacto from "./pages/doctor/DoctorContacto";
-import DoctorGracias from "./pages/doctor/DoctorGracias";
+// Páginas del doctor (renderizadas por LayoutDoctor como secciones apiladas)
 
 // Páginas del admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -55,12 +49,12 @@ const App = () => (
                 </ProtectedRoute>
               }
             >
-              <Route path="inicio" element={<DoctorInicio />} />
-              <Route path="producto" element={<DoctorProducto />} />
-              <Route path="guias" element={<DoctorGuias />} />
-              <Route path="faq" element={<DoctorFAQ />} />
-              <Route path="contacto" element={<DoctorContacto />} />
-              <Route path="gracias" element={<DoctorGracias />} />
+              <Route path="inicio" element={<></>} />
+              <Route path="producto" element={<></>} />
+              <Route path="guias" element={<></>} />
+              <Route path="faq" element={<></>} />
+              <Route path="contacto" element={<></>} />
+              <Route path="gracias" element={<></>} />
             </Route>
 
             {/* Rutas del admin (protegidas) */}

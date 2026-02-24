@@ -17,7 +17,7 @@ export function TopNavDoctor() {
   const { signOut } = useAuth();
 
   return (
-    <header className="hidden md:fixed md:top-0 md:left-0 md:block z-30 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="hidden md:fixed md:top-0 md:left-0 md:block z-30 w-full border-b border-border bg-white supports-[backdrop-filter]:bg-background">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <span className="text-lg font-bold text-primary">B. Braun</span>
 
