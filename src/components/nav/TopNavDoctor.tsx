@@ -4,6 +4,7 @@ import { Home, Package, BookOpen, HelpCircle, MessageSquare, LogOut } from "luci
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
+import logoClaim from "@/assets/Logo_Claim_A6_RGB.jpg";
 
 const items = [
   { to: "/app/doctor/inicio", icon: Home, label: "Inicio" },
@@ -19,7 +20,7 @@ export function TopNavDoctor() {
   return (
     <header className="hidden md:fixed md:top-0 md:left-0 md:block z-30 w-full border-b border-border bg-white supports-[backdrop-filter]:bg-background">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <span className="text-lg font-bold text-primary">B. Braun</span>
+        <img src={logoClaim} alt="B. Braun" className="h-8 w-auto" />
 
         <nav className="flex items-center gap-1">
           {items.map(({ to, icon: Icon, label }) => (

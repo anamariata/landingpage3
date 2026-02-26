@@ -4,6 +4,7 @@ import { Home, Package, BookOpen, HelpCircle, MessageSquare, LogOut } from "luci
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
+import logoClaim from "@/assets/Logo_Claim_A6_RGB.jpg";
 
 const items = [
   { to: "/app/doctor/inicio", icon: Home, label: "Inicio" },
@@ -19,7 +20,7 @@ export function SidebarDoctor() {
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col md:border-r md:border-border bg-sidebar">
       <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
-        <span className="text-lg font-bold text-foreground">B. Braun</span>
+        <img src={logoClaim} alt="B. Braun" className="h-8 w-auto" />
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-4">
         {items.map(({ to, icon: Icon, label }) => (
