@@ -1,4 +1,6 @@
 // Página de preguntas frecuentes
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Accordion,
   AccordionContent,
@@ -34,17 +36,51 @@ const faqs = [
 ];
 
 export default function DoctorFAQ() {
+  const [content, setContent] = useState({
+    title: "Preguntas Frecuentes",
+    subtitle: "Respuestas a las dudas más comunes sobre el Introcan Safety® 2.",
+    faqs: [] as { q: string, a: string }[],
+  });
+
+  useEffect(() => {
+    supabase
+      .from("landing_content")
+      .select("*")
+      .eq("section_key", "faq")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          let loadedFaqs = [];
+          try {
+            if (data.cta_text && data.cta_text.startsWith('[')) {
+              loadedFaqs = JSON.parse(data.cta_text);
+            }
+          } catch (e) { console.error("Error parsing FAQs", e); }
+
+          setContent({
+            title: data.title || content.title,
+            subtitle: data.subtitle || content.subtitle,
+            faqs: loadedFaqs.length > 0 ? loadedFaqs : faqs,
+          });
+        } else {
+          setContent(prev => ({ ...prev, faqs: faqs }));
+        }
+      });
+  }, []);
+
+  const displayFaqs = content.faqs.length > 0 ? content.faqs : faqs;
+
   return (
     <div className="space-y-6">
       <section>
-        <h1 className="mb-2 text-3xl font-extrabold text-foreground">Preguntas Frecuentes</h1>
+        <h1 className="mb-2 text-3xl font-extrabold text-foreground">{content.title}</h1>
         <p className="text-muted-foreground">
-          Respuestas a las dudas más comunes sobre el Introcan Safety® 2.
+          {content.subtitle}
         </p>
       </section>
 
       <Accordion type="single" collapsible className="space-y-2">
-        {faqs.map((faq, i) => (
+        {displayFaqs.map((faq, i) => (
           <AccordionItem
             key={i}
             value={`faq-${i}`}

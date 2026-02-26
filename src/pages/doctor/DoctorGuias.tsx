@@ -1,6 +1,8 @@
 // Página de guías — instrucciones de uso y pasos
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import ultrasoundImage from "@/assets/ultrasound-deep-access.jpg";
 
 const steps = [
@@ -14,12 +16,49 @@ const steps = [
 ];
 
 export default function DoctorGuias() {
+  const [content, setContent] = useState({
+    title: "Guías de Uso",
+    subtitle: "Instrucciones paso a paso para la correcta inserción del Introcan Safety® 2.",
+    hero_image_url: null as string | null,
+    steps: [] as string[],
+  });
+
+  useEffect(() => {
+    supabase
+      .from("landing_content")
+      .select("*")
+      .eq("section_key", "guias")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          let loadedSteps = [];
+          try {
+            if (data.cta_text && data.cta_text.startsWith('[')) {
+              loadedSteps = JSON.parse(data.cta_text);
+            }
+          } catch (e) { console.error("Error parsing steps", e); }
+
+          setContent({
+            title: data.title || content.title,
+            subtitle: data.subtitle || content.subtitle,
+            hero_image_url: data.hero_image_url,
+            steps: loadedSteps.length > 0 ? loadedSteps : steps,
+          });
+        } else {
+          setContent(prev => ({ ...prev, steps: steps }));
+        }
+      });
+  }, []);
+
+  const displayImage = content.hero_image_url || ultrasoundImage;
+  const displaySteps = content.steps.length > 0 ? content.steps : steps;
+
   return (
     <div className="space-y-10">
       <section>
-        <h1 className="mb-2 text-3xl font-extrabold text-foreground">Guías de Uso</h1>
+        <h1 className="mb-2 text-3xl font-extrabold text-foreground">{content.title}</h1>
         <p className="text-muted-foreground">
-          Instrucciones paso a paso para la correcta inserción del Introcan Safety® 2.
+          {content.subtitle}
         </p>
       </section>
 
@@ -27,8 +66,8 @@ export default function DoctorGuias() {
       <Card className="overflow-hidden border-0 shadow-sm">
         <div className="grid md:grid-cols-2">
           <img
-            src={ultrasoundImage}
-            alt="Catéter bajo guía ecográfica"
+            src={displayImage}
+            alt={content.title}
             className="h-64 w-full object-cover"
             loading="lazy"
           />
@@ -51,7 +90,7 @@ export default function DoctorGuias() {
           Paso a Paso
         </h2>
         <div className="space-y-3">
-          {steps.map((step, i) => (
+          {displaySteps.map((step, i) => (
             <Card key={i} className="border-0 shadow-sm">
               <CardContent className="flex items-start gap-4 p-4">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">

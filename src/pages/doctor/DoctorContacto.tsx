@@ -1,5 +1,5 @@
 // Página de contacto — formulario de lead
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +41,10 @@ export default function DoctorContacto() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [content, setContent] = useState({
+    title: "Solicitar Información",
+    subtitle: "Completa tus datos y un representante de B. Braun se comunicará contigo.",
+  });
 
   const [form, setForm] = useState({
     name: "",
@@ -49,6 +53,22 @@ export default function DoctorContacto() {
     phone: "",
     product_of_interest: "",
   });
+
+  useEffect(() => {
+    supabase
+      .from("landing_content")
+      .select("*")
+      .eq("section_key", "contacto")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setContent({
+            title: data.title || content.title,
+            subtitle: data.subtitle || content.subtitle,
+          });
+        }
+      });
+  }, []);
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -93,9 +113,9 @@ export default function DoctorContacto() {
     <div className="mx-auto max-w-lg min-h-screen flex flex-col justify-start py-8 overflow-y-auto">
       <Card className="border-0 shadow-sm flex-1">
         <CardHeader>
-          <CardTitle className="text-2xl">Solicitar Información</CardTitle>
+          <CardTitle className="text-2xl">{content.title}</CardTitle>
           <CardDescription>
-            Completa tus datos y un representante de B. Braun se comunicará contigo.
+            {content.subtitle}
           </CardDescription>
         </CardHeader>
         <CardContent>

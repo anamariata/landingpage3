@@ -1,7 +1,9 @@
 // Página de producto — información técnica del Introcan Safety
+import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -33,21 +35,45 @@ const specs = [
 ];
 
 export default function DoctorProducto() {
+  const [content, setContent] = useState({
+    title: "Introcan Safety® 2",
+    subtitle: "El catéter IV cerrado con protección automática contra pinchazos. Diseñado para proteger al clínico y al paciente sin comprometer la flexibilidad clínica.",
+    hero_image_url: null as string | null,
+  });
+
+  useEffect(() => {
+    supabase
+      .from("landing_content")
+      .select("*")
+      .eq("section_key", "producto")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setContent({
+            title: data.title || content.title,
+            subtitle: data.subtitle || content.subtitle,
+            hero_image_url: data.hero_image_url,
+          });
+        }
+      });
+  }, []);
+
+  const displayImage = content.hero_image_url || heroImage;
+
   return (
     <div className="space-y-10">
       {/* Encabezado del producto */}
       <section className="flex flex-col gap-6 md:flex-row md:items-center">
         <img
-          src={heroImage}
-          alt="Introcan Safety 2"
+          src={displayImage}
+          alt={content.title}
           className="h-48 w-full rounded-xl object-contain md:w-48"
           loading="lazy"
         />
         <div>
-          <h1 className="text-3xl font-extrabold text-foreground">Introcan Safety® 2</h1>
+          <h1 className="text-3xl font-extrabold text-foreground">{content.title}</h1>
           <p className="mt-2 text-muted-foreground leading-relaxed">
-            El catéter IV cerrado con protección automática contra pinchazos. Diseñado para proteger
-            al clínico y al paciente sin comprometer la flexibilidad clínica.
+            {content.subtitle}
           </p>
           <Button variant="outline" className="mt-4 rounded-full gap-2">
             <Download className="h-4 w-4" />
