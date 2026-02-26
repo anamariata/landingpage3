@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Save, Upload, CheckCircle } from "lucide-react";
+import { Loader2, Save, Upload, CheckCircle, X } from "lucide-react";
 
 type LandingContent = {
   id?: string;
@@ -208,6 +208,77 @@ export default function AdminLandingEditor() {
                     />
                   </div>
 
+                  {/* Editor de Beneficios para Producto */}
+                  {activeSection === "producto" && (
+                    <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
+                      <Label className="text-base font-bold">Beneficios Clave</Label>
+                      <div className="space-y-4">
+                        {(() => {
+                          let items: { title: string, description: string }[] = [];
+                          try {
+                            if (form.cta_text && form.cta_text.startsWith('[')) {
+                              items = JSON.parse(form.cta_text);
+                            }
+                          } catch (e) { items = []; }
+
+                          return (
+                            <>
+                              {items.map((item, idx) => (
+                                <Card key={idx} className="relative p-3 border-primary/10">
+                                  <div className="grid gap-2">
+                                    <Input
+                                      value={item.title}
+                                      placeholder="Título del beneficio"
+                                      className="font-bold border-0 bg-transparent p-0 h-auto focus-visible:ring-0"
+                                      onChange={(e) => {
+                                        const next = [...items];
+                                        next[idx].title = e.target.value;
+                                        setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
+                                      }}
+                                    />
+                                    <Textarea
+                                      value={item.description}
+                                      placeholder="Descripción corta"
+                                      rows={2}
+                                      className="text-sm border-0 bg-transparent p-0 h-auto focus-visible:ring-0 resize-none"
+                                      onChange={(e) => {
+                                        const next = [...items];
+                                        next[idx].description = e.target.value;
+                                        setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
+                                      }}
+                                    />
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background border shadow-sm text-destructive"
+                                    onClick={() => {
+                                      const next = items.filter((_, i) => i !== idx);
+                                      setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
+                                    }}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </Card>
+                              ))}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full border-dashed"
+                                onClick={() => {
+                                  const next = [...items, { title: "", description: "" }];
+                                  setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
+                                }}
+                              >
+                                + Añadir Beneficio
+                              </Button>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Editor de Listas para Guías */}
                   {activeSection === "guias" && (
                     <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
@@ -245,7 +316,7 @@ export default function AdminLandingEditor() {
                                       setForm(p => ({ ...p, cta_text: JSON.stringify(newSteps) }));
                                     }}
                                   >
-                                    <Loader2 className="h-4 w-4 rotate-45" /> {/* Usando Loader2 como X temporal si no hay ícono X */}
+                                    <X className="h-4 w-4" />
                                   </Button>
                                 </div>
                               ))}
@@ -316,7 +387,7 @@ export default function AdminLandingEditor() {
                                       setForm(p => ({ ...p, cta_text: JSON.stringify(newFaqs) }));
                                     }}
                                   >
-                                    <Loader2 className="h-3 w-3 rotate-45" />
+                                    <X className="h-3 w-3" />
                                   </Button>
                                 </Card>
                               ))}

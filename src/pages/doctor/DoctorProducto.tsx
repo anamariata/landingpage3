@@ -39,6 +39,7 @@ export default function DoctorProducto() {
     title: "Introcan Safety® 2",
     subtitle: "El catéter IV cerrado con protección automática contra pinchazos. Diseñado para proteger al clínico y al paciente sin comprometer la flexibilidad clínica.",
     hero_image_url: null as string | null,
+    benefits: [] as { title: string, description: string, image?: string }[],
   });
 
   useEffect(() => {
@@ -49,16 +50,25 @@ export default function DoctorProducto() {
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
+          let loadedBenefits = [];
+          try {
+            if (data.cta_text && data.cta_text.startsWith('[')) {
+              loadedBenefits = JSON.parse(data.cta_text);
+            }
+          } catch (e) { console.error("Error parsing benefits", e); }
+
           setContent({
             title: data.title || content.title,
             subtitle: data.subtitle || content.subtitle,
             hero_image_url: data.hero_image_url,
+            benefits: loadedBenefits.length > 0 ? loadedBenefits : benefits,
           });
         }
       });
   }, []);
 
   const displayImage = content.hero_image_url || heroImage;
+  const displayBenefits = content.benefits.length > 0 ? content.benefits : benefits;
 
   return (
     <div className="space-y-10">
@@ -86,15 +96,15 @@ export default function DoctorProducto() {
       <section>
         <h2 className="mb-6 text-2xl font-bold text-foreground">Beneficios Clave</h2>
         <div className="grid gap-6 md:grid-cols-3">
-          {benefits.map((b) => (
-            <Card key={b.title} className="border-0 shadow-sm overflow-hidden">
+          {displayBenefits.map((b) => (
+            <Card key={b.title} className="border-0 shadow-sm overflow-hidden hover:scale-[1.02] transition-transform duration-300">
               <CardContent className="p-0 flex flex-col">
                 <div className="flex h-40 w-full items-center justify-center bg-primary/10">
-                  <img src={b.image} alt={b.title} className="h-32 w-32 object-contain" />
+                  <img src={b.image || beneficio1} alt={b.title} className="h-32 w-32 object-contain" />
                 </div>
                 <div className="p-6">
                   <h3 className="mb-2 font-bold text-foreground">{b.title}</h3>
-                  <p className="text-sm text-muted-foreground">{b.description}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{b.description}</p>
                 </div>
               </CardContent>
             </Card>
