@@ -55,7 +55,7 @@ export function LayoutDoctor() {
                 key={id}
                 ref={(el) => (refs.current[id] = el)}
                 id={id}
-                className="min-h-screen py-8"
+                className="min-h-screen py-8 scroll-mt-20"
               >
                 <Component />
               </section>
