@@ -40,9 +40,12 @@ export default function DoctorProducto() {
     subtitle: "El catéter IV cerrado con protección automática contra pinchazos. Diseñado para proteger al clínico y al paciente sin comprometer la flexibilidad clínica.",
     hero_image_url: null as string | null,
     benefits: [] as { title: string, description: string, image?: string }[],
+    specs: [] as { gauge: string, length: string, diameter: string, flow: string, material: string }[],
+    specsTitle: "Especificaciones Técnicas",
   });
 
   useEffect(() => {
+    // Cargar contenido general e beneficios
     supabase
       .from("landing_content")
       .select("*")
@@ -57,18 +60,43 @@ export default function DoctorProducto() {
             }
           } catch (e) { console.error("Error parsing benefits", e); }
 
-          setContent({
-            title: data.title || content.title,
-            subtitle: data.subtitle || content.subtitle,
+          setContent(prev => ({
+            ...prev,
+            title: data.title || prev.title,
+            subtitle: data.subtitle || prev.subtitle,
             hero_image_url: data.hero_image_url,
-            benefits: loadedBenefits.length > 0 ? loadedBenefits : benefits,
-          });
+            benefits: loadedBenefits,
+          }));
+        }
+      });
+
+    // Cargar especificaciones
+    supabase
+      .from("landing_content")
+      .select("*")
+      .eq("section_key", "especificaciones")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          let loadedSpecs = [];
+          try {
+            if (data.cta_text && data.cta_text.startsWith('[')) {
+              loadedSpecs = JSON.parse(data.cta_text);
+            }
+          } catch (e) { console.error("Error parsing specs", e); }
+
+          setContent(prev => ({
+            ...prev,
+            specsTitle: data.title || prev.specsTitle,
+            specs: loadedSpecs,
+          }));
         }
       });
   }, []);
 
   const displayImage = content.hero_image_url || heroImage;
   const displayBenefits = content.benefits.length > 0 ? content.benefits : benefits;
+  const displaySpecs = content.specs.length > 0 ? content.specs : specs;
 
   return (
     <div className="space-y-10">
@@ -92,7 +120,12 @@ export default function DoctorProducto() {
         </div>
       </section>
 
-      {/* Beneficios */}
+      {/* 
+        Sección de Beneficios Clave
+        Los beneficios se renderizan de forma dinámica desde Supabase.
+        Cada beneficio (b) intentará cargar su propia `image`. Si el administrador
+        no ha subido ninguna o es un dato antiguo, se usará `beneficio1` por defecto.
+      */}
       <section>
         <h2 className="mb-6 text-2xl font-bold text-foreground">Beneficios Clave</h2>
         <div className="grid gap-6 md:grid-cols-3">
@@ -100,7 +133,8 @@ export default function DoctorProducto() {
             <Card key={b.title} className="border-0 shadow-sm overflow-hidden hover:scale-[1.02] transition-transform duration-300">
               <CardContent className="p-0 flex flex-col">
                 <div className="flex h-40 w-full items-center justify-center bg-primary/10">
-                  <img src={b.image || beneficio1} alt={b.title} className="h-32 w-32 object-contain" />
+                  {/* Aquí se inyecta la imagen dinámica del JSON o el fallback */}
+                  <img src={b.image || beneficio1} alt={b.title} className="h-32 w-32 object-contain mix-blend-multiply" />
                 </div>
                 <div className="p-6">
                   <h3 className="mb-2 font-bold text-foreground">{b.title}</h3>
@@ -114,7 +148,7 @@ export default function DoctorProducto() {
 
       {/* Tabla técnica */}
       <section>
-        <h2 className="mb-6 text-2xl font-bold text-foreground">Especificaciones Técnicas</h2>
+        <h2 className="mb-6 text-2xl font-bold text-foreground">{content.specsTitle}</h2>
         <Card className="overflow-hidden border-0 shadow-sm">
           <Table>
             <TableHeader>
@@ -127,8 +161,8 @@ export default function DoctorProducto() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {specs.map((s) => (
-                <TableRow key={s.gauge}>
+              {displaySpecs.map((s, idx) => (
+                <TableRow key={idx}>
                   <TableCell className="font-semibold">{s.gauge}</TableCell>
                   <TableCell>{s.length}</TableCell>
                   <TableCell>{s.diameter}</TableCell>

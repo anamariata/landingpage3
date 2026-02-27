@@ -16,11 +16,14 @@ const steps = [
 ];
 
 export default function DoctorGuias() {
+  // Estado principal que almacena tanto los textos generales como la lista de pasos y la tarjeta destacada
   const [content, setContent] = useState({
     title: "Guías de Uso",
     subtitle: "Instrucciones paso a paso para la correcta inserción del Introcan Safety® 2.",
     hero_image_url: null as string | null,
     steps: [] as string[],
+    featureTitle: "Cateterización guiada por ultrasonido",
+    featureDescription: "El Introcan Safety® Deep Access permite una visualización clara bajo guía ecográfica, ideal para pacientes con acceso venoso periférico difícil.",
   });
 
   useEffect(() => {
@@ -31,21 +34,33 @@ export default function DoctorGuias() {
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          let loadedSteps = [];
+          let loadedSteps: string[] = [];
+          let loadedFeatureTitle = "";
+          let loadedFeatureDescription = "";
+
+          // Parseamos el JSON para soportar tanto el formato antiguo (array puro) como el nuevo (objeto)
           try {
-            if (data.cta_text && data.cta_text.startsWith('[')) {
-              loadedSteps = JSON.parse(data.cta_text);
+            if (data.cta_text) {
+              if (data.cta_text.startsWith('[')) {
+                loadedSteps = JSON.parse(data.cta_text);
+              } else if (data.cta_text.startsWith('{')) {
+                const parsed = JSON.parse(data.cta_text);
+                loadedSteps = parsed.steps || [];
+                loadedFeatureTitle = parsed.featureTitle || "";
+                loadedFeatureDescription = parsed.featureDescription || "";
+              }
             }
           } catch (e) { console.error("Error parsing steps", e); }
 
-          setContent({
-            title: data.title || content.title,
-            subtitle: data.subtitle || content.subtitle,
+          setContent(prev => ({
+            ...prev,
+            title: data.title || prev.title,
+            subtitle: data.subtitle || prev.subtitle,
             hero_image_url: data.hero_image_url,
-            steps: loadedSteps.length > 0 ? loadedSteps : steps,
-          });
-        } else {
-          setContent(prev => ({ ...prev, steps: steps }));
+            steps: loadedSteps.length > 0 ? loadedSteps : prev.steps,
+            featureTitle: loadedFeatureTitle || prev.featureTitle,
+            featureDescription: loadedFeatureDescription || prev.featureDescription,
+          }));
         }
       });
   }, []);
@@ -73,11 +88,10 @@ export default function DoctorGuias() {
           />
           <CardContent className="flex flex-col justify-center p-6">
             <h2 className="mb-3 text-xl font-bold text-foreground">
-              Cateterización guiada por ultrasonido
+              {content.featureTitle}
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              El Introcan Safety® Deep Access permite una visualización clara bajo guía ecográfica,
-              ideal para pacientes con acceso venoso periférico difícil.
+              {content.featureDescription}
             </p>
           </CardContent>
         </div>

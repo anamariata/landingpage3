@@ -10,22 +10,25 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Save, Upload, CheckCircle, X } from "lucide-react";
 
+// Definición del tipo para el contenido de la landing, alineado con la tabla 'landing_content' de Supabase
 type LandingContent = {
   id?: string;
   title: string;
   subtitle: string;
-  cta_text: string;
+  cta_text: string;     // Usado para texto simple o JSON stringificado (listas, tablas)
   hero_image_url: string | null;
-  section_key: string;
+  section_key: string;  // Identificador único de la sección (hero, producto, especificaciones, etc.)
 };
 
 export default function AdminLandingEditor() {
+  // Estados para controlar la UI y validaciones
   const [activeSection, setActiveSection] = useState("hero");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Estado del formulario actual
   const [form, setForm] = useState<LandingContent>({
     title: "",
     subtitle: "",
@@ -34,6 +37,7 @@ export default function AdminLandingEditor() {
     section_key: "hero",
   });
 
+  // Función para cargar los datos de una sección específica desde Supabase
   const loadContent = async (key: string) => {
     setLoading(true);
     setError(null);
@@ -67,10 +71,12 @@ export default function AdminLandingEditor() {
     setLoading(false);
   };
 
+  // Recargar el contenido cada vez que el usuario cambia de pestaña
   useEffect(() => {
     loadContent(activeSection);
   }, [activeSection]);
 
+  // Gestión de subida de imágenes a Supabase Storage
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -91,6 +97,7 @@ export default function AdminLandingEditor() {
     setForm((prev) => ({ ...prev, hero_image_url: data.publicUrl }));
   };
 
+  // Función unificada para guardar los cambios (insert o update)
   const handleSave = async () => {
     setSaving(true);
     setError(null);
@@ -137,9 +144,11 @@ export default function AdminLandingEditor() {
       </div>
 
       <Tabs value={activeSection} onValueChange={setActiveSection} className="w-full">
+        {/* Navegación por pestañas para las diferentes secciones de la landing */}
         <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-flex mb-4">
           <TabsTrigger value="hero">Hero</TabsTrigger>
           <TabsTrigger value="producto">Producto</TabsTrigger>
+          <TabsTrigger value="especificaciones">Especificaciones</TabsTrigger>
           <TabsTrigger value="guias">Guías</TabsTrigger>
           <TabsTrigger value="faq">FAQ</TabsTrigger>
           <TabsTrigger value="contacto">Contacto</TabsTrigger>
@@ -160,7 +169,8 @@ export default function AdminLandingEditor() {
                       activeSection === "producto" ? "Sección Producto" :
                         activeSection === "guias" ? "Sección Guías" :
                           activeSection === "faq" ? "Sección FAQ" :
-                            activeSection === "contacto" ? "Sección Contacto" : "Sección Gracias"
+                            activeSection === "especificaciones" ? "Especificaciones Técnicas" :
+                              activeSection === "contacto" ? "Sección Contacto" : "Sección Gracias"
                   }
                 </CardTitle>
               </CardHeader>
@@ -198,23 +208,153 @@ export default function AdminLandingEditor() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Contenido / Descripción Inicial</Label>
-                    <Textarea
-                      value={form.subtitle}
-                      onChange={(e) => setForm((p) => ({ ...p, subtitle: e.target.value }))}
-                      rows={3}
-                      placeholder="Escribe el contenido principal de esta sección..."
-                    />
-                  </div>
+                  {activeSection !== "especificaciones" && (
+                    <div className="space-y-2">
+                      <Label>Contenido / Descripción Inicial</Label>
+                      <Textarea
+                        value={form.subtitle}
+                        onChange={(e) => setForm((p) => ({ ...p, subtitle: e.target.value }))}
+                        rows={3}
+                        placeholder="Escribe el contenido principal de esta sección..."
+                      />
+                    </div>
+                  )}
 
-                  {/* Editor de Beneficios para Producto */}
+                  {/* 
+                    EDITOR DE ESPECIFICACIONES TÉCNICAS
+                    Los datos se almacenan como un array de objetos JSON en el campo cta_text
+                  */}
+                  {activeSection === "especificaciones" && (
+                    <div className="space-y-4 rounded-lg border bg-muted/50 p-4 overflow-x-auto">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-base font-bold">Filas de la Tabla</Label>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            let items = [];
+                            try {
+                              if (form.cta_text && form.cta_text.startsWith('[')) {
+                                items = JSON.parse(form.cta_text);
+                              }
+                            } catch (e) { items = []; }
+                            const next = [...items, { gauge: "", length: "", diameter: "", flow: "", material: "" }];
+                            setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
+                          }}
+                        >
+                          + Añadir Fila
+                        </Button>
+                      </div>
+
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-muted-foreground border-b uppercase text-[10px] tracking-wider">
+                            <th className="pb-2 font-medium text-left px-2">Calibre</th>
+                            <th className="pb-2 font-medium text-left px-2">Longitud</th>
+                            <th className="pb-2 font-medium text-left px-2">Diámetro</th>
+                            <th className="pb-2 font-medium text-left px-2">Flujo</th>
+                            <th className="pb-2 font-medium text-left px-2">Material</th>
+                            <th className="pb-2 w-8"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(() => {
+                            let items: any[] = [];
+                            try {
+                              if (form.cta_text && form.cta_text.startsWith('[')) {
+                                items = JSON.parse(form.cta_text);
+                              }
+                            } catch (e) { items = []; }
+
+                            return items.map((item, idx) => (
+                              <tr key={idx} className="border-b border-muted last:border-0">
+                                <td className="py-2 px-1">
+                                  <Input
+                                    value={item.gauge}
+                                    className="h-8 text-xs"
+                                    onChange={(e) => {
+                                      const next = [...items];
+                                      next[idx].gauge = e.target.value;
+                                      setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
+                                    }}
+                                  />
+                                </td>
+                                <td className="py-2 px-1">
+                                  <Input
+                                    value={item.length}
+                                    className="h-8 text-xs"
+                                    onChange={(e) => {
+                                      const next = [...items];
+                                      next[idx].length = e.target.value;
+                                      setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
+                                    }}
+                                  />
+                                </td>
+                                <td className="py-2 px-1">
+                                  <Input
+                                    value={item.diameter}
+                                    className="h-8 text-xs"
+                                    onChange={(e) => {
+                                      const next = [...items];
+                                      next[idx].diameter = e.target.value;
+                                      setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
+                                    }}
+                                  />
+                                </td>
+                                <td className="py-2 px-1">
+                                  <Input
+                                    value={item.flow}
+                                    className="h-8 text-xs"
+                                    onChange={(e) => {
+                                      const next = [...items];
+                                      next[idx].flow = e.target.value;
+                                      setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
+                                    }}
+                                  />
+                                </td>
+                                <td className="py-2 px-1">
+                                  <Input
+                                    value={item.material}
+                                    className="h-8 text-xs"
+                                    onChange={(e) => {
+                                      const next = [...items];
+                                      next[idx].material = e.target.value;
+                                      setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
+                                    }}
+                                  />
+                                </td>
+                                <td className="py-2 px-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive"
+                                    onClick={() => {
+                                      const next = items.filter((_, i) => i !== idx);
+                                      setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </td>
+                              </tr>
+                            ));
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* 
+                    EDITOR DE BENEFICIOS PARA PRODUCTO
+                    Maneja una lista de beneficios (título, descripción, imagen individual)
+                  */}
                   {activeSection === "producto" && (
                     <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
                       <Label className="text-base font-bold">Beneficios Clave</Label>
                       <div className="space-y-4">
                         {(() => {
-                          let items: { title: string, description: string }[] = [];
+                          // Soporta el campo 'image' dinámico por cada beneficio
+                          let items: { title: string, description: string, image?: string }[] = [];
                           try {
                             if (form.cta_text && form.cta_text.startsWith('[')) {
                               items = JSON.parse(form.cta_text);
@@ -225,33 +365,74 @@ export default function AdminLandingEditor() {
                             <>
                               {items.map((item, idx) => (
                                 <Card key={idx} className="relative p-3 border-primary/10">
-                                  <div className="grid gap-2">
-                                    <Input
-                                      value={item.title}
-                                      placeholder="Título del beneficio"
-                                      className="font-bold border-0 bg-transparent p-0 h-auto focus-visible:ring-0"
-                                      onChange={(e) => {
-                                        const next = [...items];
-                                        next[idx].title = e.target.value;
-                                        setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
-                                      }}
-                                    />
-                                    <Textarea
-                                      value={item.description}
-                                      placeholder="Descripción corta"
-                                      rows={2}
-                                      className="text-sm border-0 bg-transparent p-0 h-auto focus-visible:ring-0 resize-none"
-                                      onChange={(e) => {
-                                        const next = [...items];
-                                        next[idx].description = e.target.value;
-                                        setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
-                                      }}
-                                    />
+                                  <div className="grid gap-4 md:grid-cols-[100px_1fr]">
+
+                                    {/* Contenedor de Imagen del Beneficio */}
+                                    <div className="group relative flex h-24 w-full flex-col items-center justify-center overflow-hidden rounded-md border bg-background">
+                                      {item.image ? (
+                                        <img src={item.image} alt={item.title} className="h-full w-full object-contain p-1" />
+                                      ) : (
+                                        <span className="text-[10px] text-muted-foreground text-center px-1">Subir Imagen</span>
+                                      )}
+                                      <label className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                                        <Upload className="h-4 w-4" />
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          className="hidden"
+                                          onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+
+                                            // Creamos un path dinámico usando la fecha para evitar colisiones
+                                            const ext = file.name.split(".").pop();
+                                            const path = `benefit-${Date.now()}.${ext}`;
+
+                                            // Subir directamente a Supabase
+                                            const { error: uploadErr } = await supabase.storage.from("landing-images").upload(path, file, { upsert: true });
+                                            if (uploadErr) return; // TODO: handle error en UI
+
+                                            const { data } = supabase.storage.from("landing-images").getPublicUrl(path);
+
+                                            // Actualizar el estado temporal de los items con la nueva URL pública
+                                            const next = [...items];
+                                            next[idx].image = data.publicUrl;
+                                            setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
+                                          }}
+                                        />
+                                      </label>
+                                    </div>
+
+                                    {/* Textos del Beneficio */}
+                                    <div className="grid gap-2">
+                                      <Input
+                                        value={item.title}
+                                        placeholder="Título del beneficio"
+                                        className="h-auto border-0 bg-transparent p-0 font-bold focus-visible:ring-0"
+                                        onChange={(e) => {
+                                          const next = [...items];
+                                          next[idx].title = e.target.value;
+                                          setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
+                                        }}
+                                      />
+                                      <Textarea
+                                        value={item.description}
+                                        placeholder="Descripción corta"
+                                        rows={2}
+                                        className="h-auto resize-none border-0 bg-transparent p-0 text-sm focus-visible:ring-0"
+                                        onChange={(e) => {
+                                          const next = [...items];
+                                          next[idx].description = e.target.value;
+                                          setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
+                                        }}
+                                      />
+                                    </div>
                                   </div>
+
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background border shadow-sm text-destructive"
+                                    className="absolute -right-2 -top-2 h-6 w-6 rounded-full border bg-background text-destructive shadow-sm"
                                     onClick={() => {
                                       const next = items.filter((_, i) => i !== idx);
                                       setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
@@ -266,7 +447,7 @@ export default function AdminLandingEditor() {
                                 size="sm"
                                 className="w-full border-dashed"
                                 onClick={() => {
-                                  const next = [...items, { title: "", description: "" }];
+                                  const next = [...items, { title: "", description: "", image: "" }];
                                   setForm(p => ({ ...p, cta_text: JSON.stringify(next) }));
                                 }}
                               >
@@ -279,31 +460,74 @@ export default function AdminLandingEditor() {
                     </div>
                   )}
 
-                  {/* Editor de Listas para Guías */}
+                  {/* 
+                    EDITOR DE GUÍAS DE USO
+                    Maneja una tarjeta destacada (título/descripción) y una lista de pasos.
+                    Todo se guarda como un objeto JSON en cta_text: { featureTitle, featureDescription, steps }
+                  */}
                   {activeSection === "guias" && (
-                    <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
-                      <Label className="text-base font-bold">Pasos de la Guía</Label>
-                      <div className="space-y-3">
-                        {(() => {
-                          let steps: string[] = [];
-                          try {
-                            if (form.cta_text && form.cta_text.startsWith('[')) {
-                              steps = JSON.parse(form.cta_text);
+                    <div className="space-y-6 rounded-lg border bg-muted/50 p-4">
+                      {(() => {
+                        let data = { featureTitle: "", featureDescription: "", steps: [] as string[] };
+                        try {
+                          if (form.cta_text) {
+                            if (form.cta_text.startsWith('[')) {
+                              // Migración de formato antiguo (solo array) a nuevo formato (objeto)
+                              data.steps = JSON.parse(form.cta_text);
+                            } else if (form.cta_text.startsWith('{')) {
+                              data = { ...data, ...JSON.parse(form.cta_text) };
                             }
-                          } catch (e) { steps = []; }
+                          }
+                        } catch (e) { /* ignore */ }
 
-                          return (
-                            <>
-                              {steps.map((step, idx) => (
+                        return (
+                          <>
+                            {/* Editor de la Tarjeta Destacada */}
+                            <div className="space-y-4">
+                              <Label className="text-base font-bold text-primary">Tarjeta Destacada (Imagen)</Label>
+                              <div className="grid gap-4 md:grid-cols-2">
+                                <div className="space-y-2">
+                                  <Label className="text-xs">Título de la Tarjeta</Label>
+                                  <Input
+                                    value={data.featureTitle}
+                                    placeholder="Ej: Cateterización guiada por ultrasonido"
+                                    onChange={(e) => {
+                                      const newData = { ...data, featureTitle: e.target.value };
+                                      setForm(p => ({ ...p, cta_text: JSON.stringify(newData) }));
+                                    }}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs">Descripción de la Tarjeta</Label>
+                                  <Textarea
+                                    value={data.featureDescription}
+                                    placeholder="Breve descripción del caso de uso..."
+                                    rows={2}
+                                    onChange={(e) => {
+                                      const newData = { ...data, featureDescription: e.target.value };
+                                      setForm(p => ({ ...p, cta_text: JSON.stringify(newData) }));
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Separador */}
+                            <div className="border-t border-border"></div>
+
+                            {/* Editor de la Lista de Pasos */}
+                            <div className="space-y-3">
+                              <Label className="text-base font-bold text-primary">Lista de Pasos (Paso a Paso)</Label>
+                              {data.steps.map((step, idx) => (
                                 <div key={idx} className="flex gap-2">
                                   <div className="flex-1">
                                     <Input
                                       value={step}
                                       placeholder={`Paso ${idx + 1}`}
                                       onChange={(e) => {
-                                        const newSteps = [...steps];
+                                        const newSteps = [...data.steps];
                                         newSteps[idx] = e.target.value;
-                                        setForm(p => ({ ...p, cta_text: JSON.stringify(newSteps) }));
+                                        setForm(p => ({ ...p, cta_text: JSON.stringify({ ...data, steps: newSteps }) }));
                                       }}
                                     />
                                   </div>
@@ -312,8 +536,8 @@ export default function AdminLandingEditor() {
                                     size="icon"
                                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                     onClick={() => {
-                                      const newSteps = steps.filter((_, i) => i !== idx);
-                                      setForm(p => ({ ...p, cta_text: JSON.stringify(newSteps) }));
+                                      const newSteps = data.steps.filter((_, i) => i !== idx);
+                                      setForm(p => ({ ...p, cta_text: JSON.stringify({ ...data, steps: newSteps }) }));
                                     }}
                                   >
                                     <X className="h-4 w-4" />
@@ -325,20 +549,23 @@ export default function AdminLandingEditor() {
                                 size="sm"
                                 className="w-full border-dashed"
                                 onClick={() => {
-                                  const newSteps = [...steps, ""];
-                                  setForm(p => ({ ...p, cta_text: JSON.stringify(newSteps) }));
+                                  const newSteps = [...data.steps, ""];
+                                  setForm(p => ({ ...p, cta_text: JSON.stringify({ ...data, steps: newSteps }) }));
                                 }}
                               >
                                 + Añadir Paso
                               </Button>
-                            </>
-                          );
-                        })()}
-                      </div>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   )}
 
-                  {/* Editor de FAQ */}
+                  {/* 
+                    EDITOR DE FAQ (PREGUNTAS FRECUENTES)
+                    Maneja pares de Pregunta y Respuesta
+                  */}
                   {activeSection === "faq" && (
                     <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
                       <Label className="text-base font-bold">Preguntas y Respuestas</Label>
@@ -410,7 +637,12 @@ export default function AdminLandingEditor() {
                   )}
                 </div>
 
-                {!["faq", "contacto", "gracias"].includes(activeSection) && (
+                {/* 
+                  SECCIÓN DE IMAGEN REPRESENTATIVA 
+                  Solo mostramos el uploader de imágenes en secciones que realmente lo usan (hero, producto, guías).
+                  Secciones de solo texto/tablas quedan excluidas. 
+                */}
+                {!["faq", "contacto", "gracias", "especificaciones"].includes(activeSection) && (
                   <div className="space-y-2">
                     <Label>Imagen Representativa</Label>
                     <div className="flex items-center gap-4">
