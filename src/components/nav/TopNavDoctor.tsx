@@ -15,7 +15,7 @@ const items = [
 ];
 
 export function TopNavDoctor() {
-  const { signOut } = useAuth();
+  const { signOut, isAuthenticated } = useAuth();
 
   return (
     <header className="hidden md:fixed md:top-0 md:left-0 md:block z-30 w-full border-b border-border bg-white supports-[backdrop-filter]:bg-background">
@@ -42,15 +42,17 @@ export function TopNavDoctor() {
           ))}
         </nav>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-2 text-muted-foreground"
-          onClick={signOut}
-        >
-          <LogOut className="h-4 w-4" />
-          Salir
-        </Button>
+        {isAuthenticated && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 text-muted-foreground"
+            onClick={signOut}
+          >
+            <LogOut className="h-4 w-4" />
+            Salir
+          </Button>
+        )}
       </div>
     </header>
   );

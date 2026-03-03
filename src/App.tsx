@@ -40,15 +40,8 @@ const App = () => (
             <Route path="/login-doctor" element={<LoginDoctor />} />
             <Route path="/login-admin" element={<LoginAdmin />} />
 
-            {/* Rutas del doctor (protegidas) */}
-            <Route
-              path="/app/doctor"
-              element={
-                <ProtectedRoute requiredRole="doctor">
-                  <LayoutDoctor />
-                </ProtectedRoute>
-              }
-            >
+            {/* Rutas del doctor (públicas) */}
+            <Route path="/app/doctor" element={<LayoutDoctor />}>
               <Route path="inicio" element={<></>} />
               <Route path="producto" element={<></>} />
               <Route path="guias" element={<></>} />

@@ -18,7 +18,7 @@ export default function Index() {
       </p>
       <div className="flex flex-wrap justify-center gap-4">
         <Button asChild size="lg" className="rounded-full px-8 gap-2">
-          <Link to="/login-doctor">
+          <Link to="/app/doctor/inicio">
             Acceso Profesional
             <ArrowRight className="h-4 w-4" />
           </Link>
