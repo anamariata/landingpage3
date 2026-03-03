@@ -12,6 +12,9 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -33,4 +36,5 @@ jobs:
           path: './dist' # Le decimos que suba la carpeta dist que se acaba de crear
 
       - name: Desplegar
+        id: deployment
         uses: actions/deploy-pages@v4
